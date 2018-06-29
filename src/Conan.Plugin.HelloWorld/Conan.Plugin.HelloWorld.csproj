@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>Conan.Plugin.HelloWorld</AssemblyName>
+    <AssemblyTitle>Conan.Plugin.HelloWorld</AssemblyTitle>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <Description>HelloWorld Conan Compiler Plugin.</Description>
+    <Copyright>Alexandre Mutel</Copyright>
+    <Authors>Alexandre Mutel</Authors>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>alpha1</VersionSuffix>
+    <TargetFramework>netstandard1.3</TargetFramework>
+    <PackageId>Conan.Plugin.HelloWorld</PackageId>
+    <PackageTags>Conan;Roslyn;Compiler;Plugin</PackageTags>
+    <PackageIconUrl>https://raw.githubusercontent.com/conan-roslyn/Conan/master/img/conan.png</PackageIconUrl>
+    <PackageProjectUrl>https://github.com/conan-roslyn/Conan.Plugin.HelloWorld</PackageProjectUrl>
+    <PackageLicenseUrl>https://github.com/conan-roslyn/Conan.Plugin.HelloWorld/blob/master/license.txt</PackageLicenseUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AnalyzerPack" Version="1.0.0" PrivateAssets="all" />
+    <PackageReference Include="Conan.CodeAnalysis" Version="2.8.2-alpha5" />
+  </ItemGroup>
+</Project>

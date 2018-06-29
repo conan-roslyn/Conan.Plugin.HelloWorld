@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+      <Analyzer Include="..\Conan.Plugin.HelloWorld\bin\$(Configuration)\netstandard1.3\Conan.Plugin.HelloWorld.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Conan.Net.Compilers" Version="2.8.2-alpha5" />
+  </ItemGroup>
+
+</Project>
