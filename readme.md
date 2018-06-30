@@ -32,7 +32,7 @@ When used with Conan Compiler and in a project that has a main method, it will a
 
 ### Developing a CompilationRewriter
 
-The project `Conan.Plugin.HelloWorld` is using the package `Conan.CodeAnalysis` and is providing a [`HelloWorldCompilationRewriter`](src\Conan.Plugin\HelloWorld\HelloWorldCompilationRewriter.cs) which is implementing a `CompilationRewriter` (provided by the Conan compiler)
+The project `Conan.Plugin.HelloWorld` is using the package `Conan.CodeAnalysis` and is providing a [`HelloWorldCompilationRewriter`](src/Conan.Plugin.HelloWorld/HelloWorldCompilationRewrite.cs) which is implementing a `CompilationRewriter` (provided by the Conan compiler)
 
 > Note like for diagnostic analyzers, the project must be targeting `netstandard1.3`
 
