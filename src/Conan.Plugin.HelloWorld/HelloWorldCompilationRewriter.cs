@@ -36,20 +36,42 @@ namespace Conan.Plugin.HelloWorld
 
             var mainTree = syntaxReference.SyntaxTree;
             var root = mainTree.GetRoot();
-            var mainMethod = (MethodDeclarationSyntax) syntaxReference.GetSyntax();
+            var originalMethod = (MethodDeclarationSyntax) syntaxReference.GetSyntax();
+            var newMethod = originalMethod;
 
-            var statements = mainMethod.Body.Statements;
+            SyntaxNode firstLocationNode = null;
+
+            // Transform ExpressionBody into simple Body
+            if (originalMethod.Body == null && originalMethod.ExpressionBody != null)
+            {
+                // Remove trailing ; of the expression body method
+                var newSemiColonToken = Token(originalMethod.SemicolonToken.LeadingTrivia, SyntaxKind.None, originalMethod.SemicolonToken.TrailingTrivia);
+
+                // Transform Expression body into a simple body
+                firstLocationNode = originalMethod.ExpressionBody.Expression;
+                newMethod = originalMethod.WithSemicolonToken(newSemiColonToken).WithExpressionBody(null).WithBody(Block(SingletonList<StatementSyntax>(ExpressionStatement(originalMethod.ExpressionBody.Expression))));
+            }
+            else if (originalMethod.Body != null)
+            {
+                firstLocationNode = originalMethod.Body.Statements.FirstOrDefault();
+            }
+
+            if (newMethod.Body == null)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(ThisDescriptor, Location.None, "Main entry point empty"));
+                return compilation;
+            }
 
             // Calculate the line of the first statement
             int nextLine = 0;
-            if (statements.Count > 0)
+            if (firstLocationNode != null)
             {
-                nextLine = statements[0].GetLocation().GetLineSpan().StartLinePosition.Line + 1;
+                nextLine = firstLocationNode.GetLocation().GetLineSpan().StartLinePosition.Line + 1;
             }
             else
             {
                 // Otherwise take whatever trailing trivia the body has
-                var trailingTrivia = mainMethod.Body.GetTrailingTrivia();
+                var trailingTrivia = newMethod.Body.GetTrailingTrivia();
                 if (trailingTrivia.Count > 0)
                 {
                     nextLine = trailingTrivia[0].GetLocation().GetLineSpan().StartLinePosition.Line + 1;
@@ -72,9 +94,7 @@ namespace Conan.Plugin.HelloWorld
                                 SyntaxKind.SimpleMemberAccessExpression,
                                 MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
-                                    IdentifierName(Identifier(TriviaList(
-                                        // #line hidden
-                                        Trivia(LineDirectiveTrivia(Token(SyntaxKind.HiddenKeyword), true))), "System", TriviaList())),
+                                    IdentifierName(Identifier("System")),
                                     IdentifierName("Console")),
                                 IdentifierName("WriteLine")))
                         .WithArgumentList(
@@ -88,10 +108,17 @@ namespace Conan.Plugin.HelloWorld
                 .WithTrailingTrivia(TriviaList(Trivia(LineDirectiveTrivia(Literal(nextLine), true))))
                 .NormalizeWhitespace();
 
-            statements = statements.Insert(0, helloWorldFromConan);
-            var newMainMethod = mainMethod.WithBody(mainMethod.Body.WithStatements(statements));
+            // #line default
+            var leadingTrivias = newMethod.GetLeadingTrivia();
+            leadingTrivias = leadingTrivias.Insert(0, LineDirectiveHidden());
+            leadingTrivias = leadingTrivias.Insert(0, CarriageReturnLineFeed);
+            newMethod = newMethod.WithLeadingTrivia(leadingTrivias);
 
-            var newRoot = root.ReplaceNode(mainMethod, newMainMethod);
+            var statements = newMethod.Body.Statements;
+            statements = statements.Insert(0, helloWorldFromConan);
+            newMethod = newMethod.WithBody(newMethod.Body.WithStatements(statements));
+
+            var newRoot = root.ReplaceNode(originalMethod, newMethod);
 
             // Replace the syntax tree
             compilation = compilation.ReplaceSyntaxTree(mainTree, newRoot.SyntaxTree);
@@ -103,6 +130,28 @@ namespace Conan.Plugin.HelloWorld
             context.ReportDiagnostic(Diagnostic.Create(ThisDescriptor, Location.None, $"Main method successfuly modified by the HelloWorld Conan Plugin (See modified file at: {newMainFile})"));
 
             return compilation;
+        }
+
+        private static SyntaxTrivia LineDirectiveHidden()
+        {
+            // Emit the trivia: #line hidden
+            // with proper spaces and \r\n
+            return Trivia(
+                LineDirectiveTrivia(
+                        Token(SyntaxKind.HiddenKeyword),
+                        true)
+                    .WithLineKeyword(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.LineKeyword,
+                            TriviaList(
+                                Space)))
+                    .WithEndOfDirectiveToken(
+                        Token(
+                            TriviaList(),
+                            SyntaxKind.EndOfDirectiveToken,
+                            TriviaList(
+                                CarriageReturnLineFeed))));
         }
     }
 }
